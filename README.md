@@ -7,22 +7,22 @@ FamilyPhotoSharing jedná se o aplikaci, která vznikla v rámci diplomové prá
 
 otevřít power shell jako administrátor
 
-1. Nainstaluj Chocolatey následujícím příkaz
+1. Nainstaluj Chocolatey následujícím příkaz:
 Set-ExecutionPolicy Bypass -Scope Process -Force; `
 [System.Net.ServicePointManager]::SecurityProtocol = `
 [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
 iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-2. Nainstaluj mkcert následujícím příkazem
+2. Nainstaluj mkcert následujícím příkazem:
 choco install mkcert -y
 
-3. Vytvoř lokální autoritu
+3. Vytvoř lokální autoritu:
 mkcert -install
 
 4. Vytvoř certifikáty
 ideálně vytvořit localhost pro spuštění v rámci serveru a serverovou pro produkci
 nejdříve je nutné zjistit IP adresu serveru nebo zařízení kde bude nainstalována Docker aplikace
-poté tímto příkazem vytvořit certifikát pro localhost a server (192.168.0.1 nahradit IP adresou serveru)
+poté tímto příkazem vytvořit certifikát pro localhost a server (192.168.0.1 nahradit IP adresou serveru):
 mkcert localhost 192.168.0.1
 
 5. Cesta ke kořenovému certifikátu
@@ -35,18 +35,18 @@ C:\Users\<username>\AppData\Local\mkcert\
 
 otevřít terminál
 
-1. Nainstaluj Homebrew
+1. Nainstaluj Homebrew:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-2. Nainstaluj mkcert
+2. Nainstaluj mkcert:
 brew install mkcert
 
-pokud by nebyl Homebrew přidaný do path spusťte tento příkaz, kde username nahradíte svým jménem v souborovém systému
+pokud by nebyl Homebrew přidaný do path spusťte tento příkaz, kde username nahradíte svým jménem v souborovém systému:
 echo >> /Users/username/.zprofile
 echo 'eval "$(/opt/homebrew/bin/brew shellenv zsh)"' >> /Users/username/.zprofile
 eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 
-3. Vytvoř lokální CA
+3. Vytvoř lokální CA:
 mkcert -install
 
 4 vytvoř certifikáty
@@ -73,24 +73,24 @@ pozor Library je skrytá složka a je nutné ji zobrazit
 3. Pokud se certifikáty jmenují jinak než localhost+1.pem a localhost+1-key.pem, tak je nutné je přejmenovat v souboru docker-compose.yml a také v souboru /nginx/nging.conf
 4. V souboru DP_FamilyPhotoSharing/docker-compose.yml změnit cestu k souborovému systému C:/Users/gabaj/Documents/DockerTemp:/app/files
 5. Otevřít terminál ve složce projektu kde se nachází docker-compose.yml
-6. Spustit příkaz docker compose up -d --build
+6. Spustit příkaz: docker compose up -d --build
 7. Ve složce DP_FamilyPhotoSharing se nacházá soubor data.json, v tomto soubrou je uložen šifrovací klíč (tento klíč si můžete změnit)
 8. Instalace šifrovacího klíče, bez správně vloženého klíče nejde aplikace spustit!!!
 
-Instalace klíče WIN
+Instalace klíče WIN:
 curl.exe -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" -H "Content-Type: application/json" -X POST -d "@data.json" http://localhost:8200/v1/secret/data/myapp
 
-Ověření klíče WIN
+Ověření klíče WIN:
 curl.exe -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" http://localhost:8200/v1/secret/data/myapp
 
-Instalace klíče MAC
+Instalace klíče MAC:
 curl -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" \
      -H "Content-Type: application/json" \
      -X POST \
      -d @data.json \
      http://localhost:8200/v1/secret/data/myapp
 
-Ověření klíče MAC
+Ověření klíče MAC:
 curl -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" \
      http://localhost:8200/v1/secret/data/myapp
 
