@@ -49,7 +49,7 @@ eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 3. Vytvoř lokální CA:
 mkcert -install
 
-4 vytvoř certifikáty
+4. vytvoř certifikáty
 ideálně vytvořit localhost pro spuštění v rámci serveru a serverovou pro produkci
 nejdříve je nutné zjistit IP adresu serveru nebo zařízení kde bude nainstalována Docker aplikace
 poté tímto příkazem vytvořit certifikát pro localhost a server (192.168.0.1 nahradit IP adresou serveru)
