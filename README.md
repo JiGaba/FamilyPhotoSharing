@@ -84,7 +84,9 @@ Ověření klíče WIN:
 curl.exe -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" http://localhost:8200/v1/secret/data/myapp
 
 !!! Pozor příkazy kopírujte přímo ze zdrojového kódu .MD souboru, v náhledu se odstraňují lomítka !!!
+
 Instalace klíče MAC:
+
 curl -H "X-Vault-Token: s3cR3t-VAuLt-r00t-T0k3n-9f2b1c7e4a9d6f3b8e1d4c7a" \
      -H "Content-Type: application/json" \
      -X POST \
