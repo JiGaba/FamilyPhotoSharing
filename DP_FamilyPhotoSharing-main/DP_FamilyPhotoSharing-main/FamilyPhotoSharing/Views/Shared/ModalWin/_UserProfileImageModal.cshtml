@@ -1,0 +1,101 @@
+﻿<div class="modal fade" id="profilePhotoModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Nahrát profilový obrázek</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="text-center mb-3">
+                    <img id="profilePreview"
+                         src="@(Model?.SystemImagesId > 0
+                                     ? Url.Action("GetProfileImage", "User", new { id = Model.SystemImagesId })
+                                     : "")"
+                         class="rounded-circle border"
+                         style="width:150px;height:150px;object-fit:cover;" />
+
+                </div>
+
+                <div class="mb-3">
+                    <label for="profileFile" class="form-label">Vyberte obrázek</label>
+                    <input type="file"
+                           id="profileFile"
+                           class="form-control"
+                           accept="image/*" />
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button id="uploadProfileBtn" type="button" class="btn btn-success">Uložit</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const fileInput = document.getElementById("profileFile");
+        const preview = document.getElementById("profilePreview");
+
+        // náhled obrázku bez uložení
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // odeslání na server
+        document.getElementById("uploadProfileBtn").addEventListener("click", async () => {
+            const file = fileInput.files[0];
+            const modalEl = document.getElementById("profilePhotoModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            if (!file) {
+                showToast("Vyberte prosím obrázek.", TOAST_DANGER);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/User/UploadProfilePhoto", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                showToast("Profilový obrázek byl uložen.", TOAST_SUCCESS);
+                refreshProfileImage();
+                setTimeout(() => {
+                    location.reload();
+                }, 800);
+            } else {
+                showToast("Chyba při ukládání obrázku.", TOAST_DANGER);
+            }
+        });
+
+    });
+
+    function refreshProfileImage() {
+        const img = document.getElementById("PhotoTitle");
+
+        if (!img) {
+            location.reload();
+            return;
+        }
+
+        img.src = img.src.split("?")[0] + "?refresh=" + Date.now();
+    }
+
+</script>

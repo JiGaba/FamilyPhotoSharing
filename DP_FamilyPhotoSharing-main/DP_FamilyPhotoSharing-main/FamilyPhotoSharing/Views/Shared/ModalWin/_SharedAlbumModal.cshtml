@@ -1,0 +1,86 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@model List<SharedPhotoAlbumView>
+@{
+    int index = 1;
+}
+
+<div class="modal fade" id="sharedAlbumModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Sdílet fotografie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="sharedAlbumForm" method="post" action="@Url.Action("Start_AddPhotoToSharedAlbum", "Background")">
+
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Pořadí</th>
+                                <th>Název</th>
+                                <th class="text-center">Počet fotografií</th>
+                                <th class="text-center">Počet uživatelů</th>
+                                <th>Vytvořeno</th>
+                                <th class="text-center">Vybráno</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var album in Model.OrderByDescending(u => u.AlbumName))
+                            {
+                                <tr>
+                                    <td>@index.</td>
+                                    <td>@album?.AlbumName</td>
+                                    <td class="text-center">@album?.PhotoCount</td>
+                                    <td class="text-center">@((album?.HostUserCount ?? 0) + 1)</td>
+                                    <td>@album?.CreateDateTime.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        <input type="radio"
+                                               name="selectedSharedAlbum"
+                                               class="form-check-input album-radio"
+                                               value="@album?.Id"
+                                                @(index == 1 ? "checked" : "")
+                                               style="cursor:pointer" />
+
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            
+
+                <div class="modal-footer">
+                    <button id="confirmSharedAlbumModal" type="button" class="btn btn-success" data-bs-dismiss="modal">
+                        Sdílet
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.getElementById("confirmSharedAlbumModal").addEventListener("click", () => {
+
+        const selected = document.querySelector("input[name='selectedSharedAlbum']:checked");
+        const thumbnailData = document.querySelector("#thumbnailDataInt").value;
+
+        if (!selected) return;
+
+        if (selectedCount <= 0) {
+            showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+            return;
+        }
+
+        BS_AddPhotoToSharedAlbum(selectedPhotoIds, selected.value, thumbnailData);
+        const modalEl = document.getElementById("sharedAlbumModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
+    });
+
+</script>

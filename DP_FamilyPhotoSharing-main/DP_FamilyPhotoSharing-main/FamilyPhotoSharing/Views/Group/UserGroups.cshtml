@@ -1,0 +1,91 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@{
+    ViewData["Title"] = "Uživatelské skupiny";
+}
+@{
+    int index = 1;
+}
+@model List<UserGroupView>;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="display-4 mb-0">Rodiny</h1>
+    <a onclick="location.href='@Url.Action("UserGroup", "Group", new { id = 0 })'" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>
+        <svg bootstrap-icon="People" width="24" height="24" aria-label="GroupAdd"></svg> Přidat rodinu
+    </a>
+</div>
+<br />
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Pořadí</th>
+            <th>Název</th>
+            <th>Poslední úprava</th>
+            <th>Počet účastníků</th>
+            <th class="text-center">Odstranit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group in Model)
+        {
+            var total = group.UsersActive + group.UsersInactive;
+            <tr onclick="location.href='@Url.Action("UserGroup", "Group", new { id = group?.Id})'" style="cursor:pointer;">
+                <td>@index.</td>
+                <td>@group?.GroupName</td>
+                <td>@group?.CreateDateTime.ToString("dd.MM.yyyy")</td>
+                <td>
+                    <span title="Aktivní uživatelé">
+                        <svg bootstrap-icon="PersonFill" width="24" height="24" aria-label="Aktivní uživatelé"></svg>
+                        @group.UsersActive
+                    </span>
+                    / 
+                    <span title="Neaktivní uživatelé">
+                        <svg bootstrap-icon="PersonFill" width="24" height="24" aria-label="Neaktivní uživatelé" style="opacity: 0.4;"></svg>
+                        @group.UsersInactive
+                    </span>
+                </td>
+                <td class="text-center">
+                    @if (total == 0)
+                    {
+                        <span title="Smazat rodinu.">
+                            <svg bootstrap-icon="Trash3Fill" onclick="event.stopPropagation();deleteGroup(@group.Id)" width="24" height="24" aria-label="Smazání rodiny"></svg>
+                        </span>
+                    }
+                    else
+                    {
+                        <span title="Nemůžete smazat rodinu, která má již přidané uživatele.">
+                            <svg bootstrap-icon="Trash3" onclick="event.stopPropagation();" width="24" height="24" aria-label="Smazání rodiny"></svg>
+                        </span>
+                    }
+                </td>
+            </tr>
+            index++;
+        }
+    </tbody>
+</table>
+
+<script>
+    async function deleteGroup(groupId) {
+
+        if (!confirm("Opravdu chcete smazat tuto rodinu?")) {
+            return;
+        }
+
+        const response = await fetch("/Group/DeleteProfile", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id: groupId })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            location.reload();
+        } else {
+            showToast(result.message || "Nepodařilo se smazat skupinu.", TOAST_DANGER);
+        }
+    }
+</script>

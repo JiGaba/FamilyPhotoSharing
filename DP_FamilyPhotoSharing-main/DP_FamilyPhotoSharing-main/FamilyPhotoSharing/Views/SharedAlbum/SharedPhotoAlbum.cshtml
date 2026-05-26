@@ -1,0 +1,201 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@{
+    ViewData["Title"] = "Sdílené fotoalbum";
+}
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@model SharedPhotoAlbumView;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    @if (Model?.Id == 0)
+    {
+        <h1 class="display-4 mb-0">Nové sdílené fotoalbum</h1>
+    }
+    else
+    {
+        <h1 class="display-4 mb-0">Sdílené fotoalbum</h1>
+    }
+    <svg bootstrap-icon="ImageFill" width="80" height="80" aria-label="Group"></svg>
+</div>
+<br />
+<form method="post" enctype="multipart/form-data" action="/SharedAlbum/EditSharedPhotoAlbum">
+    <!--Hidden inputs-->
+    <input type="hidden" asp-for="Id" name="Id" value="@Model?.Id" />
+    <input type="hidden" asp-for="UserGroupsId" name="UserGroupsId" value="@Model?.UserGroupsId" />
+    <input type="hidden" asp-for="OwnerUserId" name="OwnerUserId" value="@Model?.OwnerUserId" />
+    <input type="hidden" asp-for="TitlePhotoId" name="TitlePhotoId" value="@Model?.TitlePhotoId" />
+    <input type="hidden" asp-for="SavedHostIds" name="SavedHostIds" value="@Model?.SavedHostIds" />
+    <input type="hidden" asp-for="ChangedHostIds" name="ChangedHostIds" value="@Model?.ChangedHostIds" />
+    <!-- /Hidden inputs -->
+
+
+    <!--
+    <div class="modal fade" id="progressModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Probíhá přešifrování klíčů…</h5>
+                </div>
+
+                <div class="modal-body">
+                    <div class="progress">
+                        <div id="progressBar" class="progress-bar" style="width: 0%">0%</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    -->
+
+    <div class="d-flex align-items-center mb-3">
+        <label for="AlbumName" class="me-3" style="width: 150px;">Název</label>
+        <div class="flex-grow-1">
+            <input asp-for="AlbumName" class="form-control" maxlength="255" value="@Model?.AlbumName" />
+            <span asp-validation-for="AlbumName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label asp-for="AlbumDescription" class="me-3" style="width: 150px;">Popis</label>
+        <div class="flex-grow-1">
+            <textarea asp-for="AlbumDescription"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Popis alba">
+            </textarea>
+            <span asp-validation-for="AlbumDescription" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label for="PhotoCount" class="me-3" style="width: 150px;">Počet fotografií</label>
+        <div class="flex-grow-1">
+            <input asp-for="PhotoCount" class="form-control" maxlength="100" value="@Model?.PhotoCount" readonly/>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label class="me-3" style="width: 150px;">Přístupy:</label>
+        <div class="flex-grow-1">
+        </div>
+    </div>
+        <div id="selectedUsersContainer"></div>
+    <table class="table table-hover" id="usersTable">
+            <thead>
+                <tr>
+                    <th>Pořadí</th>
+                    <th>Jméno</th>
+                    <th>Příjmení</th>
+                    <th>Role</th>
+                    <th>Přístup</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if(Model.UserModalViews != null && Model.UserModalViews.Any())
+            {
+                var index = 1;
+                @foreach (var user in Model.UserModalViews.OrderByDescending(u => u.Owner))
+                {
+                        @if (user.HasAccess || user.Owner)
+                        {
+                            <tr>
+                                <td>@index.</td>
+                                <td>@user?.UserName</td>
+                                <td>@user?.UserSurname</td>
+                                <td>@user?.UserRoleString</td>
+                            <td>@(user?.Owner == true ? "vlastník" : "host")</td>
+                            </tr>
+                            index++;
+                        }                 
+                }
+            }
+            </tbody>
+        </table>
+    <br />
+
+    <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Uložit změny</button>
+        @if (Model?.Id != 0)
+        {
+            <button type="button" class="btn btn-primary" onclick="confirmRedirect(@Model.Id)">Zobrazit album</button>
+        }
+        <a asp-controller="SharedAlbum" asp-action="MySharedPhotoAlbums" class="btn btn-secondary">
+            Zpět
+        </a>
+    </div>
+    <br />
+
+    @if (Model?.Id != 0)
+    {
+        <div class="form-text text-end w-100">
+            poslední změna provedena @Model?.CreateDateTime.ToString("dd.MM.yyyy")
+            @if (!string.IsNullOrWhiteSpace(@Model?.CreateAuthorName))
+            {
+                <span>uživatelem @Model.CreateAuthorName</span>
+            }
+        </div>
+    }
+
+</form>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const confirmBtn = document.getElementById("confirmUsers");
+        if (!confirmBtn) return;
+
+        confirmBtn.addEventListener("click", function() {
+
+            const tableBody = document.querySelector("#usersTable tbody");
+            const hiddenInput = document.getElementById("ChangedHostIds");
+            const selected = document.querySelectorAll(".user-checkbox:checked");
+
+            let index = 1;
+            let ids = [];
+
+            tableBody.innerHTML = ""; 
+
+            selected.forEach(chk => {
+                const userId = chk.value;
+                const userName = chk.dataset.name;
+                const userSurname = chk.dataset.surname;
+                const userRole = chk.dataset.role;
+                const userAccess = chk.dataset.access;
+                const owner = chk.dataset.owner;
+
+                if (owner !== "true") {
+                    ids.push(userId);
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index}.</td>
+                    <td>${userName}</td>
+                    <td>${userSurname}</td>
+                    <td>${userRole}</td>
+                    <td>${userAccess}</td>
+                `;
+                tableBody.appendChild(tr);
+
+                index++;
+            });
+
+            hiddenInput.value = ids.join(",");
+        });
+
+    });
+
+    
+    document.getElementById("confirmUsers").addEventListener("click", function() {
+        this.blur();
+    });
+
+    function confirmRedirect(id) {
+    if (confirm('Budete přesměrování na jinou stránku, veškerý neuložený obsah bude ztracený. Opravdu chcete pokračovat?')) {
+        window.location.href = '/Gallery/ShowMySharedAlbum?albumId=' + id;
+    }
+}
+    
+</script>

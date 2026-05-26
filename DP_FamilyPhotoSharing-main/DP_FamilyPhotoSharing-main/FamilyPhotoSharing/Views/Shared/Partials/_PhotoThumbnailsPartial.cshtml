@@ -1,0 +1,16 @@
+﻿@using ModelLayer.Data
+@model List<PhotoModel>
+
+@if (Model.Any())
+{
+    @foreach (var thumb in Model)
+    {
+        <div class="gallery-item" data-file_id="@thumb.Id">
+            <div class="select-circle"></div>
+            <img loading="lazy"
+                 src="@Url.Action("GetThumbnail", "Gallery", new { id = thumb.Id })"
+                 alt="thumb"
+                 onerror="this.outerHTML='<div style=\'width:150px;height:150px;background:black;display:block;color:white;text-align:center;\'>Fotografii se nepodařilo nalézt</div>'">
+        </div>
+    }
+}

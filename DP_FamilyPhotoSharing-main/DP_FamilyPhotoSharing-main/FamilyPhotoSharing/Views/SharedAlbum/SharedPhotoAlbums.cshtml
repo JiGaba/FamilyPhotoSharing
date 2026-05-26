@@ -1,0 +1,58 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@using System.Security.Claims
+@using ModelLayer.System
+@{
+    ViewData["Title"] = "Sdílená fotoalba";
+}
+@{
+    int index = 1;
+}
+@model List<SharedPhotoAlbumView>;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="display-4 mb-0">Sdílená fotoalba</h1>
+</div>
+<br />
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Pořadí</th>
+            @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+            {
+                <th>ID</th>
+            }
+            <th>Název</th>
+            <th>Vytvořil</th>
+            <th>Poslední úprava</th>        
+            <th class="text-center">Počet uživatelů</th>
+            <th class="text-center">Počet fotografií</th>
+            <th class="text-center">Zobrazit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var album in Model)
+        {
+            <tr onclick="" style="cursor:pointer;">
+                <td>@index.</td>
+                @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+                {
+                    <td>@album?.Id</td>
+                }
+                <td>@album?.AlbumName</td>
+                <td>@album?.CreateAuthorName</td>
+                <td>@album?.CreateDateTime.ToString("dd.MM.yyyy")</td>
+                <td class="text-center">@album?.HostUserCount</td>
+                <td class="text-center">@album?.PhotoCount</td>
+                <td class="text-center">
+                    <a href="/Gallery/ShowSharedAlbum?albumId=@album.Id"
+                           title="Zobrazit album"
+                           onclick="event.stopPropagation();">
+                        <svg bootstrap-icon="DoorOpen" style="color:black" width="24" height="24"></svg>
+                    </a>
+                </td>
+            </tr>
+            index++;
+        }
+    </tbody>
+</table>

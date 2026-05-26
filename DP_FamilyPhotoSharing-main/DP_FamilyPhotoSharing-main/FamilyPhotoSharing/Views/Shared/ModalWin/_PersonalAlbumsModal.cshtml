@@ -1,0 +1,139 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@model List<PhotoAlbumView>
+@{
+    int index = 1;
+}
+
+<div class="modal fade" id="personalAlbumModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Přesunout fotografie do soukromého alba</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="personalAlbumForm" method="post" action="@Url.Action("MovePersonalOrGroup", "Gallery")">
+
+                <input type="hidden" id="selectedAlbumId" value="@Model.FirstOrDefault(x => x.Selected)?.Id" />
+
+                <div class="modal-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Pořadí</th>
+                                <th>Název</th>
+                                <th class="text-center">Počet fotografií</th>
+                                <th>Vytvořeno</th>
+                                <th class="text-center">Vybráno</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var album in Model.OrderByDescending(u => u.AlbumName))
+                            {
+                                <tr>
+                                    <td>@index.</td>
+                                    <td>@album?.AlbumName</td>
+                                    <td class="text-center">@album?.PhotoCount</td>
+                                    <td>
+                                        @(album?.CreateDateTime == DateTime.MinValue
+                                        ? ""
+                                        : album?.CreateDateTime.ToString("dd.MM.yyyy HH:mm"))
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="radio"
+                                               name="selectedPersonalAlbum"
+                                               class="form-check-input album-radio"
+                                               value="@album?.Id"
+                                               @(album?.Selected ?? false ? "checked" : "")
+                                               style="cursor:pointer" />
+
+                                    </td>
+                                </tr>
+                                index++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal-footer">
+                    <button id="confirmPersonalAlbumModal" type="button" class="btn btn-success">
+                        Přesunout
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.getElementById("confirmPersonalAlbumModal").addEventListener("click", () => {
+
+        const selected = document.querySelector("input[name='selectedPersonalAlbum']:checked");
+        const lastSelectedId = document.querySelector("#selectedAlbumId");
+        const titlePhotoId = document.querySelector("#titlePhotoId").value;
+        let changeTitlePhoto = false;
+
+        if (!selected) return;
+
+        if (selectedCount <= 0) {
+            showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+            return;
+        }
+
+        if (lastSelectedId.value == selected.value) {
+            showToast("Fotografie se v tomto albu již nacházejí.", TOAST_DANGER);
+            return;
+        }
+
+        if (selectedPhotoIds.includes(titlePhotoId))
+            changeTitlePhoto = true;
+
+        fetch("@Url.Action("MovePersonalOrGroup", "Gallery")", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                personal: true,
+                fromAlbumId: lastSelectedId.value,
+                toAlbumId: selected.value,
+                photoIds: selectedPhotoIds
+            })
+        })
+        .then(async response => {
+
+            if (!response.ok) {
+                const text = await response.text(); // může být prázdné
+                console.error("Chyba serveru:", text);
+                showToast("Nastala chyba při zpracování požadavku.", TOAST_DANGER);
+                return;
+            }
+
+            return response.json();
+        })
+        .then(result => {
+            if (!result) return;
+
+            // Zavřít modal
+            const modalEl = document.getElementById("personalAlbumModal");
+            bootstrap.Modal.getInstance(modalEl).hide();
+
+            if(changeTitlePhoto)
+                showToast("Bylo přesunuto celkem "+selectedCount+" fotografií, včetně titulní fotografie alba.", TOAST_SUCCESS);
+            else
+                showToast("Bylo přesunuto celkem "+selectedCount+" fotografií.", TOAST_SUCCESS);
+
+            document.getElementById("toggleActions").click();
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        })
+        .catch(err => {
+            console.error("Network error:", err);
+            showToast("Nepodařilo se spojit se serverem.", TOAST_DANGER);
+        });
+    });
+
+
+</script>

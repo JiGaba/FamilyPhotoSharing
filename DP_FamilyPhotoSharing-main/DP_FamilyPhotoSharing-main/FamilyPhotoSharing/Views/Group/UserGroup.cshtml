@@ -1,0 +1,71 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@{
+    ViewData["Title"] = "Uživatelská skupina";
+}
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@model UserGroupView;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    @if (Model?.Id == 0)
+    {
+        <h1 class="display-4 mb-0">Vytvoření nové rodiny</h1>
+    }
+    else
+    {
+        <h1 class="display-4 mb-0">Rodina</h1>
+    }
+    <svg bootstrap-icon="People" width="80" height="80" aria-label="Group"></svg>
+</div>
+<br />
+<form method="post" enctype="multipart/form-data" action="/Group/EditProfile">
+    <!--Hidden inputs-->
+    <input type="hidden" asp-for="Id" name="Id" value="@Model?.Id" />
+    <!-- /Hidden inputs -->
+    <div class="d-flex align-items-center mb-3">
+        <label for="Login" class="me-3" style="width: 150px;">Název</label>
+        <div class="flex-grow-1">
+            <input asp-for="GroupName" class="form-control" maxlength="100" value="@Model?.GroupName" />
+            <span asp-validation-for="GroupName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label for="GroupDescription" class="me-3" style="width: 150px;">Popis</label>
+        <div class="flex-grow-1">
+            <textarea asp-for="GroupDescription"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Popis rodiny">
+                      @Model?.GroupDescription
+            </textarea>
+            <span asp-validation-for="GroupDescription" class="text-danger"></span>
+        </div>
+    </div>
+
+    <br />   
+
+    <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Uložit změny</button>
+        <a asp-controller="Group" asp-action="UserGroups" class="btn btn-secondary">
+            Zpět
+        </a>
+    </div>
+    <br />
+
+
+    @if (Model?.Id != 0)
+    {
+        <div class="form-text text-end w-100">
+            poslední změna provedena @Model?.CreateDateTime.ToString("dd.MM.yyyy")
+            @if (!string.IsNullOrWhiteSpace(@Model?.IAutorName))
+            {
+                <span>uživatelem @Model.IAutorName</span>
+            }
+        </div>
+    }
+
+</form>

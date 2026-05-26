@@ -1,0 +1,50 @@
+﻿@using System.Security.Claims
+@using FamilyPhotoSharing.AccountManagement
+<div class="dropdown ms-auto">
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (int.TryParse(User.FindFirst(CustomClaimTypes.ProfileImage)?.Value, out int imageId) && imageId > 0)
+            {
+                <img id="PhotoTitle" 
+                     src=" @(imageId > 0
+                        ? Url.Action("GetProfileImage", "User", new { id = imageId })    
+                        : "")"
+                     class="rounded-circle border"
+                     style="width:32px;height:32px;object-fit:cover;" />
+            }
+            else
+            {
+                <svg bootstrap-icon="PersonCircle" width="32" height="32" aria-label="User"></svg>
+            }            
+            
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end text-small shadow" style="width:300px;">
+            <li><span class="dropdown-item-text">@User.Identity.Name</span></li>
+            <li>
+                <span class="dropdown-item-text">
+                    Uživatelská role: @User.FindFirst(ClaimTypes.Role)?.Value
+                </span>
+            </li>
+            <li><a class="dropdown-item" href="/User/Profile?userId=@User.FindFirst(ClaimTypes.NameIdentifier)?.Value">Přejít na profil @User.FindFirst(ClaimTypes.Name)?.Value</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/Account/Logout">Odhlásit se</a></li>
+        </ul>
+    }
+    else
+    {
+        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <svg bootstrap-icon="PersonCircle" width="32" height="32" aria-label="User"></svg>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end text-small shadow" style="width:300px;">
+            <form method="post" asp-controller="Account" asp-action="Login">
+            <li><span class="dropdown-item-text">Uživatelské&nbsp;jméno&nbsp;<input type="text" name="userLogin" class="form-control"></span></li>
+            <li><span class="dropdown-item-text">Heslo&nbsp;<input type="password" name="password" class="form-control"></span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><span class="dropdown-item-text"><button type="submit" class="btn btn-primary">Přihlásit</button></span></li>
+            <li><span class="dropdown-item-text"><a asp-controller="Account" asp-action="ForgotPassword">Zapomenuté heslo?</a></span></li>
+            </form>
+        </ul>
+    }
+
+</div>

@@ -1,0 +1,21 @@
+IF OBJECT_ID('dbo.UserKeys', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.UserKeys;
+    PRINT 'Tabulka UserKeys byla smazána.';
+END
+GO
+BEGIN
+	CREATE TABLE UserKeys (
+		Id INT PRIMARY KEY IDENTITY(1,1),
+		UserId INT NOT NULL,
+		RSAPublicKey VARBINARY(MAX) NOT NULL,
+		RSAPrivateKey VARBINARY(MAX) NOT NULL,
+		PublicKeyNonce VARBINARY(12) NOT NULL,
+		PublicKeyTag VARBINARY(16) NOT NULL,
+		PrivateKeyNonce VARBINARY(12) NOT NULL,
+		PrivateKeyTag VARBINARY(16) NOT NULL,
+		CreateDateTime DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+		CreateAuthorId INT NOT NULL DEFAULT 0,
+	);
+END
+GO

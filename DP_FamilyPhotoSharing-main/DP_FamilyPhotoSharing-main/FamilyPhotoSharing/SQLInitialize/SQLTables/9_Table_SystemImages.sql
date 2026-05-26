@@ -1,0 +1,17 @@
+IF OBJECT_ID('dbo.SystemImages', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.SystemImages;
+    PRINT 'Tabulka SystemImages byla smazána.';
+END
+GO
+BEGIN
+	CREATE TABLE SystemImages (
+		Id INT PRIMARY KEY IDENTITY(1,1),
+		Size INT NOT NULL DEFAULT 0,
+		PhotoNameOriginal NVARCHAR(255) NOT NULL DEFAULT '',
+		FSPhotoName NVARCHAR(255) NOT NULL DEFAULT '',
+		CreateDateTime DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+		CreateAuthorId INT NOT NULL DEFAULT 0,
+	);
+END
+GO

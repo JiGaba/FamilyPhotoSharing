@@ -1,0 +1,131 @@
+﻿@using BootstrapIcons.Net
+@using FamilyPhotoSharing.ViewComponents
+@using Microsoft.AspNetCore.Html
+@using ModelLayer.Enums
+@using ModelLayer.System
+@model List<MenuSectionModel>
+
+<style>
+#left-menu,
+#left-menu li,
+#left-menu a,
+.menu-section-title {
+    text-align: left;
+}
+
+.menu li {padding: 8px;}
+
+.menu-section-title {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.0;      
+    margin-left: 6px;
+    color: inherit;         
+}
+
+#left-menu svg {
+    width: 22px !important;
+    height: 22px !important;
+    margin-left: 6px;      
+    margin-right: 4px;      
+    vertical-align: middle;
+}
+
+#left-menu > li {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 3px 0;         
+    margin: 0;
+}
+
+.submenu {
+    list-style: none;
+    padding-left: 12px;     
+    margin: 2px 0;
+}
+
+.submenu li a {
+    display: block;
+    padding: 1px 0;        
+    font-size: 12px;
+    line-height: 1.0;
+    color: #b5b5b5;       
+}
+
+.submenu li a:hover {
+    color: #333;
+}
+</style>
+
+@{
+    var currentController = ViewBag.CurrentController as string;
+    var currentAction = ViewBag.CurrentAction as string;
+
+    var manualController = ViewBag.ManualController as string;
+    var manualAction = ViewBag.ManualAction as string;
+    var index = 0;
+}
+
+<ul id="left-menu" class="menu">
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        @foreach (var item in Model)
+        {
+            var isActive =
+            item.Controller == currentController &&
+            item.Action == currentAction ||
+            item.Controller == manualController &&
+            item.Action == manualAction
+            ? "active"
+            : "";
+
+            index++;
+
+            <li class="@isActive">
+
+                @{
+                    var bootstrapIcon = item.Picture switch
+                    {
+                        MenuPicture.Settings => BootstrapIconGlyph.GearWideConnected,
+                        MenuPicture.Logs => BootstrapIconGlyph.Bug,
+                        MenuPicture.SharedPhotoWithMe => BootstrapIconGlyph.Share,
+                        MenuPicture.SharedPhoto => BootstrapIconGlyph.ShareFill,
+                        MenuPicture.PrivateGallery => BootstrapIconGlyph.ImageFill,
+                        MenuPicture.PublicGallery => BootstrapIconGlyph.Images,
+                        _ => BootstrapIconGlyph.File
+                    };
+                }
+
+                <svg bootstrap-icon="@bootstrapIcon" width="22" height="2" aria-label="menu icon"></svg>
+                <span id="section_title_@index" class="menu-section-title">@item.Title</span>
+
+                @if (item.SubItems != null && item.SubItems.Any())
+                {
+                    <ul class="submenu">
+                        @foreach (var child in item.SubItems)
+                        {
+                            <li>
+                                <a asp-controller="@child.Controller"
+                                       asp-action="@child.Action" 
+                                       asp-all-route-data="@(child.RouteParamName != null && child.RouteParamName != "" 
+                                            ? new Dictionary<string, string> { { child.RouteParamName, child.RouteParamValue.ToString() } }
+                                            : new Dictionary<string, string>())">
+                                    @child.Title
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                
+            </li>
+        }
+    }
+    else
+    {
+        <li>
+            <svg bootstrap-icon="PersonCircle" width="32" height="32" aria-label="menu icon"></svg>
+            <a asp-controller="Account" asp-action="Login">Login</a>
+        </li>
+    }
+    
+</ul>

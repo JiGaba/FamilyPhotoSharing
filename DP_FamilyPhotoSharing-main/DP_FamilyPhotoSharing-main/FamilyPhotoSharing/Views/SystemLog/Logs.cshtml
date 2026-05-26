@@ -1,0 +1,198 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@model LogView;
+<h1>Systémový log</h1>
+<div class="container my-4">
+
+    <!-- Přepínač + selectboxy -->
+    <form asp-controller="SystemLog" asp-action="LoadNewFilters" method="post">
+
+    <!-- Hidden inputs pro uchování posledních filtrů -->
+        <input type="hidden" id="LastSelectedUserId" name="LastSelectedUserId" value="@Model.LastSelectedUserId" />
+        <input type="hidden" id="LastIsUserSelected" name="LastIsUserSelected" value="@Model.LastIsUserSelected" />
+        <input type="hidden" id="LastSelectedGroupId" name="LastSelectedGroupId" value="@Model.LastSelectedGroupId" />
+        <input type="hidden" id="LastSelectedActionType" name="LastSelectedActionType" value="@Model.LastSelectedActionType" />
+        <input type="hidden" id="LastSelectedLogType" name="LastSelectedLogType" value="@Model.LastSelectedLogType" />
+
+
+    <div class="card p-3 mb-4">
+        <h5 class="mb-3">Filtrace podle rodiny/uživatele</h5>
+
+        <!-- Switch -->
+        <div class="form-check form-switch mb-3">
+            <input asp-for="IsUserSelected" class="form-check-input" type="checkbox" id="toggleTarget" style="cursor:pointer;">
+            <label class="form-check-label" for="toggleTarget">
+                Přepnout na uživatele
+            </label>
+        </div>
+
+        <!-- Selectbox skupiny -->
+        <div id="groupSelectWrapper">
+            <label class="form-label">Vyber rodinu</label>
+                <select asp-for="SelectedGroupId" asp-items="Model.Groups" class="form-select"></select>
+        </div>
+
+        <!-- Selectbox uživatele -->
+        <div id="userSelectWrapper" style="display:none;">
+            <label class="form-label">Vyber uživatele</label>
+                <select asp-for="SelectedUserId" asp-items="Model.Users" class="form-select"></select>
+        </div>
+    </div>
+
+    <div class="card p-3 mb-4">
+        <div class="mb-3">
+            <label class="form-label">Typ chyby</label>
+            <select asp-for="SelectedLogType" asp-items="Model.LogTypes" class="form-select"></select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Typ akce</label>
+            <select asp-for="SelectedActionType" asp-items="Model.ActionTypes" class="form-select"></select>
+        </div>
+        <button id="submitBtn" class="btn btn-primary">Zobrazit</button>
+    </div>
+    </form>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Poř.</th>
+                        <th>Typ</th>
+                        <th>Akce</th>
+                        <th>Popis</th>
+                        <th>Datum</th>
+                        <th>Rodina</th>
+                        <th>Uživatel</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTable">
+                    @{
+                        var index = 1;
+                    }
+                    @foreach (var item in Model.TableData)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@item?.LogTypeName</td>
+                            <td>@item?.ActionTypeName</td>
+                            <td>@item?.LogDescription</td>
+                            <td>@item?.CreateDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@item?.GroupName</td>
+                            <td>@item?.UserName</td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Stránkování -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <button id="prevPage" class="btn btn-outline-secondary btn-sm">Předchozí</button>
+            <span id="pageInfo" class="fw-semibold">Stránka 1</span>
+            <button id="nextPage" class="btn btn-outline-secondary btn-sm">Další</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    const totalCount = @Model.Total;
+
+    // Přepínání mezi skupinou a uživatelem
+    document.getElementById("toggleTarget").addEventListener("change", function () {
+        const isUser = this.checked;
+
+        document.getElementById("groupSelectWrapper").style.display = isUser ? "none" : "block";
+        document.getElementById("userSelectWrapper").style.display = isUser ? "block" : "none";
+
+        document.querySelector("label[for='toggleTarget']").textContent =
+            isUser ? "Přepnout na skupinu" : "Přepnout na uživatele";
+    });
+
+                window.addEventListener("load", () => {
+            document.getElementById("toggleTarget")
+                .dispatchEvent(new Event("change"));
+        });
+
+    // Stránkování – offset + limit
+    let offset = 0;
+    const limit = 20;
+    let totalPages = 0;
+
+
+    function updatePagination() {
+        totalPages = Math.ceil(totalCount / limit);
+        const currentPage = offset / limit + 1;
+
+        document.getElementById("pageInfo").textContent =
+            `Stránka ${currentPage} / ${totalPages}`;
+
+        document.getElementById("prevPage").disabled = offset === 0;
+        document.getElementById("nextPage").disabled = offset + limit >= totalCount;
+    }
+
+    function loadData() {
+
+            const actionType = parseInt(document.getElementById("LastSelectedActionType").value);
+            const logType = parseInt(document.getElementById("LastSelectedLogType").value);
+            const userId = parseInt(document.getElementById("LastSelectedUserId").value);
+            const groupId = parseInt(document.getElementById("LastSelectedGroupId").value);
+                const isUserSelected = document.getElementById("LastIsUserSelected").value === "true";
+
+        fetch("/SystemLog/LoadLogs", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                offset: offset,
+                limit: limit,
+                actionType: actionType,
+                logType: logType,
+                userId: userId,
+                groupId: groupId,
+                isUserSelected: isUserSelected
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById("resultsTable");
+            tbody.innerHTML = "";
+            let index = offset + 1;
+                updatePagination();
+            data.forEach(item => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${index++}</td>
+                    <td>${item.logTypeName}</td>
+                    <td>${item.actionTypeName}</td>
+                    <td>${item.logDescription}</td>
+                    <td>${item.createDateWithFormat}</td>
+                    <td>${item.groupName}</td>
+                    <td>${item.userName}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById("pageInfo").textContent =
+                //"Stránka " + (offset / limit + 1);
+                `Stránka ${(offset / limit + 1)} / ${totalPages}`;
+        });
+    }
+
+    document.getElementById("prevPage").addEventListener("click", () => {
+        if (offset >= limit) {
+            offset -= limit;
+            loadData();
+        }
+    });
+
+    document.getElementById("nextPage").addEventListener("click", () => {
+        offset += limit;
+        loadData();
+    });
+
+    updatePagination();
+</script>

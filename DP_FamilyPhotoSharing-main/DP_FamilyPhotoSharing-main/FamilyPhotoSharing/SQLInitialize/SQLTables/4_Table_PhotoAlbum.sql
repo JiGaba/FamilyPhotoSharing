@@ -1,0 +1,20 @@
+IF OBJECT_ID('dbo.PhotoAlbum', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.PhotoAlbum;
+    PRINT 'Tabulka PhotoAlbum byla smazána.';
+END
+GO
+BEGIN
+	CREATE TABLE PhotoAlbum (
+		Id INT PRIMARY KEY IDENTITY(1,1),
+		AlbumName NVARCHAR(255) NOT NULL,
+		AlbumDescription NVARCHAR(MAX) NOT NULL DEFAULT '',
+		Personal BIT NOT NULL DEFAULT 1,
+		TitlePhotoId INT NOT NULL DEFAULT 0,
+		CreateDateTime DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+		CreateAuthor INT NOT NULL DEFAULT 0,
+		OwnerUserId INT NOT NULL,
+		UserGroupsId INT NOT NULL
+	);
+END
+GO

@@ -1,0 +1,78 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@using System.Security.Claims
+@using ModelLayer.System
+@{
+    ViewData["Title"] = "Moje sdílené fotoalba";
+}
+@{
+    int index = 1;
+}
+@model List<SharedPhotoAlbumView>;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+@Html.Partial("Partials/_BackgroundServices")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="display-4 mb-0">Moje sdílená fotoalba</h1>
+    <a onclick="location.href='@Url.Action("SharedPhotoAlbum", "SharedAlbum", new { albumId = 0 })'" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>
+        <svg bootstrap-icon="ShareFill" width="24" height="24" aria-label="SharedAlbumAdd"></svg> Přidat sdílené album
+    </a>
+</div>
+<br />
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Pořadí</th>
+            @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+            {
+                <th>ID</th>
+            }
+            <th>Název</th>
+            <th>Poslední úprava</th>
+            <th class="text-center">Počet uživatelů</th>
+            <th class="text-center">Počet fotografií</th>
+            <th class="text-center">Zobrazit</th>
+            <th class="text-center">Odstranit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var album in Model)
+        {
+            <tr onclick="location.href='@Url.Action("SharedPhotoAlbum", "SharedAlbum", new { albumId = album?.Id })'" style="cursor:pointer;">
+                <td>@index.</td>
+                @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+                {
+                    <td>@album?.Id</td>
+                }
+                <td>@album?.AlbumName</td>
+                <td>@album?.CreateDateTime.ToString("dd.MM.yyyy")</td>
+                <td class="text-center">@album?.HostUserCount</td>
+                <td class="text-center">@album?.PhotoCount</td>
+                <td class="text-center">
+                    <a href="/Gallery/ShowMySharedAlbum?albumId=@album.Id"
+                           title="Zobrazit album"
+                           onclick="event.stopPropagation();">
+                        <svg bootstrap-icon="DoorOpen" style="color:black" width="24" height="24"></svg>
+                    </a>
+                </td>
+                <td class="text-center">
+                    <span title="Smazat sdílené album.">
+                        <svg bootstrap-icon="Trash3Fill" onclick="event.stopPropagation();deleteSharedAlbum(@album?.Id)" width="24" height="24" aria-label="Smazání sdíleného alba"></svg>
+                    </span>
+                </td>
+            </tr>
+            index++;
+        }
+    </tbody>
+</table>
+
+<script>
+    async function deleteSharedAlbum(albumId) {
+
+        if (!confirm("Opravdu chcete smazat toto album? Fotografie budou přesunuty zpět do soukromé nebo rodinné galerie podle původního oprávnění.")) {
+            return;
+        }
+
+        BS_DeleteShareAlbum(albumId);
+    }
+</script>

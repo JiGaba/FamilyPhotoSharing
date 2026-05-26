@@ -1,0 +1,126 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>14044e8b-974c-4a52-a44b-e3129cab448d</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="SQLInitialize\SQLProcedures\Procedure_RelationAlbumPhotoSelectByPhotoId.sql" />
+    <None Remove="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenInsert.sql" />
+    <None Remove="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenSelectByToken.sql" />
+    <None Remove="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenUpdate.sql" />
+    <None Remove="SQLInitialize\SQLProcedures\Procedure_UserUpdateBackupKey.sql" />
+    <None Remove="SQLInitialize\SQLTables\15_Table_UserRefreshToken.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SQLInitialize\SQLFunctions\Function_GetCzechDateTime.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLFunctions\Function_UtcToCzechDatetime.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumSelectByOwnerUserId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumSelectByUserGroupsId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoAlbumUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoEncryptDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoEncryptDeleteByNotUserId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoEncryptInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoEncryptSelectByUserIdPhotoId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectByAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectByGroupId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectByOwnerIdAndPersonal.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectBySharedAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectCountByAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectCountByGroupId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectCountByOwnerAndPersonal.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoSelectCountBySharedAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoThumbnailDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoThumbnailInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoThumbnailSelectByPhotoId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_PhotoUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationAlbumPhotoDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationAlbumPhotoInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationAlbumPhotoSelectByPhotoId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationSharedAlbumPhotoDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationSharedAlbumPhotoInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationSharedAlbumPhotoSelectByPhotoId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationSharedAlbumPhotoSelectBySharedAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationUserSharedAlbumDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationUserSharedAlbumInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_RelationUserSharedAlbumSelectByAlbumId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumSelectByHostUserId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumSelectByOwnerUserId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SharedPhotoAlbumUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemImagesDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemImagesInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemImagesSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemLogInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemLogSelectByParameters.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_SystemLogSelectCountByParameters.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserGroupsDelete.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserGroupsInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserGroupsSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserGroupsSelectAll.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserGroupsUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserKeysInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserKeysSelectByUserId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenInsert.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenSelectByToken.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserRefreshTokenUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserSelect.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserSelectAll.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserSelectByGroupIdActiveRoleId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserSelectByLogin.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserSelectCountByGroupId.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserUpdate.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserUpdateBackupKey.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLProcedures\Procedure_UserUpdatePassword.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\15_Table_UserRefreshToken.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\1_Table_Photo.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\4_Table_PhotoAlbum.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\2_Table_PhotoEncrypt.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\3_Table_PhotoThumbnail.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\5_Table_RelationAlbumPhoto.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\6_Table_RelationSharedAlbumPhoto.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\7_Table_RelationUserSharedAlbum.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\8_Table_SharedPhotoAlbum.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\9_Table_SystemImages.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\10_Table_SystemLog.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\11_Table_UserGroups.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\12_Table_UserKeys.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\13_Table_UserRole.sql" />
+    <EmbeddedResource Include="SQLInitialize\SQLTables\14_Table_Users.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BootstrapIcons.AspNetCore" Version="1.13.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.23" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModelLayer\ModelLayer.csproj" />
+    <ProjectReference Include="..\ServiceLayer\ServiceLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Views\Shared\ModalWin\_UserModal.cshtml" />
+  </ItemGroup>
+
+</Project>

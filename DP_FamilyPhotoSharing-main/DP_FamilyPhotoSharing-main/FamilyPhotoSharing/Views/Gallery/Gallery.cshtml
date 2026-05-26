@@ -1,0 +1,614 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@using ModelLayer.Data
+@using ModelLayer.Enums
+@using ModelLayer.PhotoEnums
+@{
+    ViewData["Title"] = "Osobní fotogalerie";
+}
+@model GalleryView
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+@Html.Partial("ModalWin/_UserModal", Model?.UsersModal)
+@Html.Partial("ModalWin/_PersonalAlbumsModal", Model?.PersonalPhotoAlbumModal)
+@Html.Partial("ModalWin/_GroupAlbumModal", Model?.GroupPhotoAlbumModal)
+@Html.Partial("ModalWin/_SharedAlbumModal", Model?.SharedModal)
+@Html.Partial("Partials/_BackgroundServices")
+
+<style>
+    .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 150px);
+        gap: 10px;
+    }
+
+    .gallery-item {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .gallery-item img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+        display: block;
+    }        
+
+    .select-circle {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid white;
+        background: rgba(0,0,0,0.4);
+        display: none;
+        z-index: 2;
+    }
+
+    .gallery.select-mode .select-circle {
+        display: block;
+    }
+
+    .gallery-item.selected .select-circle {
+        background: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .gallery-item.selected img {
+        outline: 3px solid #0d6efd;
+    }
+
+    .pagination-container {
+        display: flex;
+        flex-wrap: wrap; 
+        justify-content: center;
+        gap: 5px; 
+        margin-top: 20px;
+    }
+
+    .pagination-container .page-link {
+        display: inline-block;
+        padding: 6px 12px;
+        text-decoration: none;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        color: #333;
+    }
+
+    .pagination-container .page-link:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+</style>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="display-4 mb-0">@Model.GalleryName</h1>
+
+    @if (Model?.TitlePotoId != 0 && Model.ThumbnailData.Equals(ThumbnailData.MainPersonalGallery))
+    {
+        <img id="profilePhoto"
+             src="@(Model?.TitlePotoId > 0
+                                         ? Url.Action("GetProfileImage", "User", new { id = Model.TitlePotoId })
+                                         : "")"
+             class="rounded-circle border"
+             style="width:80px;height:80px;object-fit:cover;" />
+    }
+    else if (Model?.TitlePotoId != 0 && ((Model.ThumbnailData is ThumbnailData.SharedAlbum or ThumbnailData.Album or ThumbnailData.GroupAlbum or ThumbnailData.MySharedAlbum)))
+    {
+        <img id="profilePhoto"
+             src="@Url.Action("GetThumbnail", "Gallery", new { id = Model.TitlePotoId })"
+             class="rounded-circle border"
+             style="width:80px;height:80px;object-fit:cover;" />
+    }
+    else
+    {
+        <svg bootstrap-icon="Image" width="80" height="80" aria-label="TitleImage"></svg>
+    }
+</div>
+
+@if (Model.ThumbnailData is ThumbnailData.Album or ThumbnailData.GroupAlbum or ThumbnailData.MySharedAlbum)
+{
+    <p id="desc" class="hidden">
+        @Model?.GalleryDescription
+    </p>
+
+    <span id="toggleDescShow" style="cursor:pointer; color:blue;">
+        <svg bootstrap-icon="ArrowDownCircle" width="16" height="16" aria-label="ShowDescription"></svg> zobrazit popis
+    </span>
+    <span id="toggleDescHide" style="cursor:pointer; color:blue;" class="hidden">
+        <svg bootstrap-icon="ArrowUpCircle" width="16" height="16" aria-label="ShowDescription"></svg> skrýt popis
+    </span>
+}
+
+<br>
+<input type="hidden" id="uploadTypeId" value="@(Model?.ThumbnailData == ThumbnailData.MainGroupGallery ? "2" : "1")" />
+<input type="hidden" id="thumbnailData" value="@Model?.ThumbnailData" />
+<input type="hidden" id="thumbnailDataInt" value="@((int)Model?.ThumbnailData)" />
+<input type="hidden" id="albumId" value="@Model?.AlbumId" />
+<input type="hidden" id="titlePhotoId" value="@Model?.TitlePotoId" />
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center my-3">
+
+    @if(!Model.ThumbnailData.Equals(ThumbnailData.SharedAlbum)){
+    <div class="d-flex gap-2 mb-3 mb-md-0">
+        @if (Model.ThumbnailData is ThumbnailData.MainPersonalGallery or ThumbnailData.MainGroupGallery or ThumbnailData.Album or ThumbnailData.GroupAlbum or ThumbnailData.MySharedAlbum or ThumbnailData.MainGroupGalleryOwnPhoto)
+        {
+            @if (!((Model.ThumbnailData is ThumbnailData.MainGroupGallery or ThumbnailData.GroupAlbum) && Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                    <button id="toggleActions" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#moveActions"><svg bootstrap-icon="Check2Square" width="16" height="16" aria-label="Select"></svg>&nbsp;Vybrat</button>
+            }        
+        }
+        @if (Model.ThumbnailData is ThumbnailData.MainPersonalGallery or ThumbnailData.MainGroupGallery)
+        {
+            <button id="toggleUpload" class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#uploadPanel"><svg bootstrap-icon="CloudArrowUp" width="16" height="16" aria-label="Load"></svg>&nbsp;Nahrát</button>
+            @if (!(Model.ThumbnailData is ThumbnailData.MainGroupGallery && Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                <button id="btnNewAlbum" class="btn btn-primary"><svg bootstrap-icon="JournalAlbum" width="16" height="16" aria-label="NewAlbum"></svg>&nbsp;Nové album</button>
+            }    
+        }
+        @if (Model.ThumbnailData is ThumbnailData.MySharedAlbum)
+        {
+            <button id="btnAddUser" class="btn btn-primary"><svg bootstrap-icon="People" width="16" height="16" aria-label="AddPeople"></svg>&nbsp;Přidat/Odebrat uživatele</button>
+        }
+    </div>
+
+    <div class="fs-5 fw-semibold text-md-end text-center">
+        <span id="value1">@ViewBag.TotalCount</span>
+        /
+        <span id="selectionCounter">0</span>
+    </div>
+    }
+</div>
+
+<div id="moveActions" class="collapse mt-3">
+    <div class="border rounded p-3 d-flex gap-2">
+        @if (Model.ThumbnailData is ThumbnailData.MainPersonalGallery)
+        {
+            <button id="btnMove" class="btn btn-outline-primary"> <svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přesunout</button>
+            <button id="btnMoveMainGroup" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přes. rodinná sekce</button>
+            <button id="btnShare" class="btn btn-outline-primary"><svg bootstrap-icon="FolderSymlink" width="16" height="16" aria-label="Share"></svg>&nbsp;Sdílet</button>
+            <button id="btnDelete" class="btn btn-outline-primary"><svg bootstrap-icon="Trash3Fill" width="16" height="16" aria-label="Delete"></svg>&nbsp;Smazat</button>
+        }
+        @if (Model.ThumbnailData is ThumbnailData.MainGroupGallery)
+        {
+            @if (!(Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                <button id="btnMoveGroup" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přesunout</button>
+                <button id="btnMoveMainPersonal" class="btn btn-outline-primary" title="Přesun do soukromé sekce vlastníka"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přes. soukromá sekce</button>
+                <button id="btnShare" class="btn btn-outline-primary"><svg bootstrap-icon="FolderSymlink" width="16" height="16" aria-label="Share"></svg>&nbsp;Sdílet</button>
+            } 
+        }
+        @if (Model.ThumbnailData is ThumbnailData.Album)
+        {
+            <button id="btnMove" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přesunout</button>
+            <button id="btnMoveMainGroup" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přes. rodinná sekce</button>
+            <button id="btnShare" class="btn btn-outline-primary"><svg bootstrap-icon="FolderSymlink" width="16" height="16" aria-label="Share"></svg>&nbsp;Sdílet</button>
+            <button id="btnTitle" class="btn btn-outline-primary"><svg bootstrap-icon="ImageAlt" width="16" height="16" aria-label="TitlePhoto"></svg>&nbsp;Úvodní fotka</button>
+            <button id="btnDelete" class="btn btn-outline-primary"><svg bootstrap-icon="Trash3Fill" width="16" height="16" aria-label="Delete"></svg>&nbsp;Smazat</button>
+        }
+        @if (Model.ThumbnailData is ThumbnailData.GroupAlbum)
+        {
+            @if (!(Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                <button id="btnMoveGroup" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přesunout</button>
+                <button id="btnMoveMainPersonal" class="btn btn-outline-primary" title="Přesun do soukromé sekce vlastníka"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přes. soukromá sekce</button>
+                <button id="btnShare" class="btn btn-outline-primary"><svg bootstrap-icon="FolderSymlink" width="16" height="16" aria-label="Share"></svg>&nbsp;Sdílet</button>
+                <button id="btnTitle" class="btn btn-outline-primary"><svg bootstrap-icon="ImageAlt" width="16" height="16" aria-label="TitlePhoto"></svg>&nbsp;Úvodní fotka</button>
+            }
+        }
+        @if (Model.ThumbnailData is ThumbnailData.MySharedAlbum)
+        {
+            <button id="btnTitle" class="btn btn-outline-primary"><svg bootstrap-icon="ImageAlt" width="16" height="16" aria-label="TitlePhoto"></svg>&nbsp;Úvodní fotka</button>
+            <button id="btnRemoveShare" class="btn btn-outline-primary"><svg bootstrap-icon="Trash3Fill" width="16" height="16" aria-label="Delete"></svg>&nbsp;Odebrat ze sdílení</button>
+        }
+        @if (Model.ThumbnailData is ThumbnailData.MainGroupGalleryOwnPhoto)
+        {
+            @if (!(Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                <button id="btnMoveGroup" class="btn btn-outline-primary"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přesunout</button>
+            }
+            @if (!(Model.UserRole is (UserRoleEnum.Host)))
+            {
+                <button id="btnMoveMainPersonal" class="btn btn-outline-primary" title="Přesun do soukromé sekce vlastníka"><svg bootstrap-icon="FolderPlus" width="16" height="16" aria-label="Move"></svg>&nbsp;Přes. soukromá sekce</button>
+            }
+            @if (!(Model.UserRole is (UserRoleEnum.User or UserRoleEnum.Host)))
+            {
+                <button id="btnShare" class="btn btn-outline-primary"><svg bootstrap-icon="FolderSymlink" width="16" height="16" aria-label="Share"></svg>&nbsp;Sdílet</button>
+            }
+            @if (!(Model.UserRole is (UserRoleEnum.Host)))
+            {
+                <button id="btnDelete" class="btn btn-outline-primary"><svg bootstrap-icon="Trash3Fill" width="16" height="16" aria-label="Delete"></svg>&nbsp;Smazat</button>
+            }
+        }
+    </div>
+</div>
+
+<hr class="my-3" style="border-top: 2px solid #e0e0e0; opacity: 1;">
+@Html.Partial("Partials/_UploaderPartial", Model.Photos)
+
+<div id="gallery" class="gallery">
+    @Html.Partial("ModalWin/_ImageDetailModal")
+
+    <!-- MODAL PRO ZOBRAZENÍ FOTKY -->
+    @Html.Partial("Partials/_PhotoThumbnailsPartial", Model.Photos)
+</div>
+
+<div id="loading" style="display:none; text-align:center; padding:20px;">
+    Načítám další fotky...
+</div>
+
+<div id="pagination" class="pagination-container">
+    @{
+        int totalPages = (int)Math.Ceiling(ViewBag.TotalCount / (double)ViewBag.PageSize);
+        for (int i = 1; i <= totalPages; i++)
+        {
+            <a class="page-link" href="@Url.Action("MainPersonalAlbum", new { page = i })">@i</a>
+        }
+    }
+</div>
+
+<script>
+    const btnNewAlbum = document.getElementById("btnNewAlbum");
+    const btnAddUser = document.getElementById("btnAddUser");
+    const btnMove = document.getElementById("btnMove");
+    const btnMoveGroup = document.getElementById("btnMoveGroup");
+    const btnMoveMainPersonal = document.getElementById("btnMoveMainPersonal");
+    const btnMoveMainGroup = document.getElementById("btnMoveMainGroup");
+    const btnShare = document.getElementById("btnShare");
+    const btnTitle = document.getElementById("btnTitle");
+    const btnDelete = document.getElementById("btnDelete");
+    const btnRemoveShare = document.getElementById("btnRemoveShare");
+    const desc = document.getElementById("desc");
+    const toggleShow = document.getElementById("toggleDescShow");
+    const toggleHide = document.getElementById("toggleDescHide");
+    const toggleActions = document.getElementById("toggleActions");
+    const gallery = document.getElementById("gallery");
+    const counter = document.getElementById("selectionCounter");
+    const loadingDiv = document.getElementById("loading");
+
+    let page = @ViewBag.Page;
+    let part = 1;
+    let loading = false;
+    let allLoaded = false;
+    let selectionMode = false;
+    let selectedCount = 0;
+    let selectedPhotoIds = [];
+
+    if(toggleShow){
+        toggleShow.addEventListener("click", () => {
+            desc.classList.remove("hidden");
+            toggleShow.classList.add("hidden");
+            toggleHide.classList.remove("hidden");
+        });
+    }
+    
+    if(toggleHide){
+        toggleHide.addEventListener("click", () => {
+            desc.classList.add("hidden");
+            toggleHide.classList.add("hidden");
+            toggleShow.classList.remove("hidden");
+        });
+    }
+
+    if(btnNewAlbum){
+        btnNewAlbum.addEventListener("click", () => {
+            const mainPersonalGallery = "@ThumbnailData.MainPersonalGallery";
+            const thumbnailData = "@Model.ThumbnailData";
+            window.location.href = (thumbnailData == mainPersonalGallery) ? '@Url.Action("PersonalPhotoAlbum", "Album")' : '@Url.Action("GroupPhotoAlbum", "Album")';
+        });
+    }
+
+    if(btnAddUser){
+        btnAddUser.addEventListener("click", () => {
+            OpenUserModal();
+        });
+    }
+
+    if(btnMove){ 
+        btnMove.addEventListener("click", () => {
+            OpenPersonalAlbumModal();
+        });
+    }
+
+    if(btnMoveGroup){ 
+        btnMoveGroup.addEventListener("click", () => {
+            OpenGroupAlbumModal();
+        });
+    }
+
+    if(btnMoveMainPersonal){ 
+        btnMoveMainPersonal.addEventListener("click", () => {
+            if(selectedPhotoIds.length <= 0){
+                showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+                return;
+            }
+
+            let albumId = document.getElementById("albumId").value
+            BS_MoveToMainPersonal(selectedPhotoIds, albumId, @((int)Model.ThumbnailData));
+        });
+    }
+
+    if(btnMoveMainGroup){ 
+        btnMoveMainGroup.addEventListener("click", () => {
+            if(selectedPhotoIds.length <= 0){
+                showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+                return;
+            }
+
+            let albumId = document.getElementById("albumId").value
+            BS_MoveToMainGroup(selectedPhotoIds, albumId, @((int)Model.ThumbnailData));
+        });
+    }
+
+    if(btnShare){ 
+        btnShare.addEventListener("click", () => {
+            OpenSharedAlbumModal();
+        });
+    }
+
+    if(btnTitle){ 
+        btnTitle.addEventListener("click", () => {
+            let thumbnailData = document.getElementById("thumbnailData").value;
+            let albumId = document.getElementById("albumId").value
+            let thumbnailAlbum = "@ThumbnailData.Album";
+            let thumbnailGroupAlbum = "@ThumbnailData.GroupAlbum";
+            let thumbnailSharedAlbum = "@ThumbnailData.MySharedAlbum";
+
+            if(selectedCount <= 0){
+                showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+                return;
+            }
+            if(selectedCount > 1){
+                showToast("Vyberte pouze jednu fotografii.", TOAST_DANGER);
+                return;
+            }
+            if(thumbnailData != thumbnailAlbum && thumbnailData != thumbnailSharedAlbum && thumbnailData != thumbnailGroupAlbum){
+                showToast("Titulní obrázek lze přidat jen u alba.", TOAST_DANGER);
+                return;
+            }
+
+            // rozlišení zda se nacházím v albu nebo sdíleném albu
+            let url = (thumbnailData == thumbnailAlbum || thumbnailData == thumbnailGroupAlbum) ? "@Url.Action("AddTitleImage", "Album")" : "@Url.Action("AddTitleImage", "SharedAlbum")";
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    albumId: albumId,
+                    photoId: selectedPhotoIds[0]
+                })
+            })
+            .then(async response => {
+
+                if (!response.ok) {
+                    const text = await response.text(); // může být prázdné
+                    console.error("Chyba serveru:", text);
+                    showToast("Nastala chyba při zpracování požadavku.", TOAST_DANGER);
+                    return;
+                }
+
+                return response.json();
+            })
+            .then(result => {
+                if (!result) return;
+
+                showToast("K albu byla přiřazena úvodní fotografie.", TOAST_SUCCESS);
+                document.getElementById("toggleActions").click();
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            })
+            .catch(err => {
+                console.error("Network error:", err);
+                showToast("Nepodařilo se spojit se serverem.", TOAST_DANGER);
+            });
+        });
+    }
+
+    if(btnDelete){ 
+        btnDelete.addEventListener("click", () => {
+            if(selectedPhotoIds.length <= 0){
+                showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+                return;
+            }
+            let albumId = document.getElementById("albumId").value
+            BS_PhotoDelete(selectedPhotoIds, albumId, @((int)Model.ThumbnailData));
+        });
+    }
+
+    if(btnRemoveShare){ 
+        btnRemoveShare.addEventListener("click", () => {
+            if(selectedPhotoIds.length <= 0){
+                showToast("Nebyla vybrána žádná fotografie.", TOAST_DANGER);
+                return;
+            }
+            let albumId = document.getElementById("albumId").value
+            BS_RemoveShare(selectedPhotoIds, albumId, @((int)Model.ThumbnailData));
+        });
+    }
+
+    // Oprava Warning při zavření modálních oken
+    document.addEventListener("show.bs.modal", e => {
+        // odstraní fokus z předchozího prvku ještě před otevřením
+        document.activeElement.blur();
+    });
+
+    document.addEventListener("hide.bs.modal", e => {
+        // zabrání tomu, aby fokus zůstal na btn-close
+        document.activeElement.blur();
+    });
+
+    function OpenPersonalAlbumModal(){
+        const modalElement = document.getElementById("personalAlbumModal");
+        const userModal = new bootstrap.Modal(modalElement);
+        userModal.show();
+    }
+
+    function OpenGroupAlbumModal(){
+        const modalElement = document.getElementById("groupAlbumModal");
+        const userModal = new bootstrap.Modal(modalElement);
+        userModal.show();
+    }
+
+    function OpenSharedAlbumModal(){
+        const modalElement = document.getElementById("sharedAlbumModal");
+        const userModal = new bootstrap.Modal(modalElement);
+        userModal.show();
+    }
+
+    function OpenUserModal(){
+        const modalElement = document.getElementById("userModal");
+        const userModal = new bootstrap.Modal(modalElement);
+        userModal.show();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggleBtn = document.getElementById("toggleUpload");
+        const uploadPanel = document.getElementById("uploadPanel");
+
+        if (!toggleBtn || !uploadPanel) {
+            return;
+        }
+
+        uploadPanel.addEventListener("shown.bs.collapse", () => {
+            toggleBtn.classList.remove("btn-primary");
+            toggleBtn.classList.add("btn-success");
+        });
+
+        uploadPanel.addEventListener("hidden.bs.collapse", () => {
+            toggleBtn.classList.remove("btn-success");
+            toggleBtn.classList.add("btn-primary");
+        });
+    });
+
+    // zapnutí / vypnutí výběru
+    if(toggleActions){
+        toggleActions.addEventListener("click", () => {
+            selectionMode = !selectionMode;
+
+            gallery.classList.toggle("select-mode", selectionMode);
+            if(selectionMode){
+                toggleActions.classList.add("btn-success");
+            toggleActions.classList.remove("btn-primary");
+            }else{
+                toggleActions.classList.remove("btn-success");
+            toggleActions.classList.add("btn-primary");
+            }
+
+            if (!selectionMode) {
+                clearSelection();
+            }
+        });
+    }
+    
+    gallery.addEventListener("click", (e) => {
+        if (!selectionMode) {
+            const item = e.target.closest(".gallery-item");
+            if (!item) return;
+
+            const fileId = item.dataset.file_id;
+            openPhotoModal(fileId);
+            return;
+        }
+
+        // režim výběru - reaguj JEN na kolečko
+        if (!e.target.classList.contains("select-circle")) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const item = e.target.closest(".gallery-item");
+        if (!item) return;
+
+        item.classList.toggle("selected");
+
+        const selected = item.classList.contains("selected");
+        item.dataset.selected = selected;
+
+        onPhotoSelectionChanged(item.dataset.file_id, selected);
+    });
+
+    function openPhotoModal(fileId) {
+        const modal = document.getElementById("photoModal");
+        const modalImg = document.getElementById("modalImage");
+
+        modal.style.display = "block";
+        modalImg.src = `/Gallery/GetFullPhoto?id=${fileId}`;
+    }
+
+    document.querySelector(".modal-close").onclick = function () {
+        document.getElementById("photoModal").style.display = "none";
+    };
+
+    document.getElementById("photoModal").onclick = function (e) {
+        if (e.target.id === "photoModal") {
+            document.getElementById("photoModal").style.display = "none";
+        }
+    };
+
+    
+
+    function onPhotoSelectionChanged(fileId, selected) {
+        if (selected) {
+            if (!selectedPhotoIds.includes(fileId)) {
+                selectedPhotoIds.push(fileId);
+            }
+        } else {
+            selectedPhotoIds = selectedPhotoIds.filter(id => id !== fileId);
+        }
+
+        selectedCount = selectedPhotoIds.length;
+        counter.innerText = selectedCount;
+    }
+
+    function clearSelection() {
+        document.querySelectorAll(".gallery-item.selected")
+            .forEach(item => {
+                item.classList.remove("selected");
+                item.dataset.selected = "false";
+            });
+        selectedCount = 0;
+        counter.innerText = "0";
+    }
+
+    function getSelectedPhotos() {
+        return [...document.querySelectorAll(".gallery-item.selected")]
+            .map(item => item.dataset.file_id);
+    }
+
+    window.getSelectedPhotos = getSelectedPhotos;
+
+    window.addEventListener("scroll", async () => {
+        if (loading || allLoaded) return;
+
+        if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+            loading = true;
+            loadingDiv.style.display = "block";
+            part++;
+
+            try {
+                const res = await fetch(`@Url.Action("LoadPhotos", "Gallery")?page=${page}&part=${part}&thumbnailData=${@ViewBag.ThumbnailData}`);
+                const html = await res.text();
+
+                if (html.trim().length > 0) {
+                    gallery.insertAdjacentHTML("beforeend", html);
+                } else {
+                    allLoaded = true; // žádné další fotky - zastav scroll
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
+            loadingDiv.style.display = "none";
+            loading = false;
+        }
+    });
+
+</script>

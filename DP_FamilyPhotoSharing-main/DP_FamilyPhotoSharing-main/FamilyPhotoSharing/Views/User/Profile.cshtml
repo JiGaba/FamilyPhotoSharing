@@ -1,0 +1,195 @@
+﻿@using ModelLayer.System
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@{
+    ViewData["Title"] = "Profile";
+}
+@model FamilyPhotoSharing.ViewsData.UserView;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+@Html.Partial("Partials/_BackgroundServices")
+
+@if ((!Model.Activated) && (Model.Id != 0))
+{
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            BS_ActiveUser(@Model.Id);
+        });
+    </script>
+}
+
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    @if(Model?.Id == 0)
+    {
+        <h1 class="display-4 mb-0">Vytvoření nového uživatele</h1>
+    }
+    else
+    {
+        <h1 class="display-4 mb-0">Uživatel - @Model?.GetName()</h1>
+    }
+    @if(Model.SystemImagesId != 0)
+    {
+        <img id="profilePhoto"
+             src="@(Model?.SystemImagesId > 0
+                    ? Url.Action("GetProfileImage", "User", new { id = Model.SystemImagesId })
+                    : "")"
+             class="rounded-circle border"
+             style="width:80px;height:80px;object-fit:cover;" />
+    }
+    else
+    {
+        <svg bootstrap-icon="PersonCircle" width="80" height="80" aria-label="User"></svg>
+    }
+    
+</div>
+
+@if (Model?.Id == Model?.RedactorId && Model?.Id != 0)
+{
+    <div id="userActions" class="mt-3">
+        <div class="border rounded p-3 d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#changePasswordModal"><svg bootstrap-icon="Key" width="16" height="16" aria-label="Password"></svg>&nbsp;Změnit heslo</button>
+            @await Html.PartialAsync("ModalWin/_ChangePasswordModal", Model?.PasswordModel)
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#profilePhotoModal">
+                <svg bootstrap-icon="PersonBoundingBox" width="16" height="16" aria-label="userImage"></svg>&nbsp;
+                @((Model?.SystemImagesId ?? 0) != 0
+                                ? "Změnit profilový obrázek"
+                                : "Nastavit profilový obrázek")
+            </button>
+            @await Html.PartialAsync("ModalWin/_UserProfileImageModal", Model)
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#securityModal">
+                <svg bootstrap-icon="FiletypeKey" width="16" height="16" aria-label="BackupKey"></svg>&nbsp;
+                @((Model?.HasBackupCode == true)
+                    ? "Změnit záchranný klíč"
+                    : "Nastavit záchranný klíč")
+            </button>
+            @await Html.PartialAsync("ModalWin/_BackupCodeModal")
+        </div>
+    </div>
+}
+<br />
+<form method="post" enctype="multipart/form-data" action="/User/Profile">
+    <!--Hidden inputs-->
+    <input type="hidden" asp-for="Id" value="@Model?.Id" />
+    <input type="hidden" asp-for="RedactorRoleId" value="@Model?.RedactorRoleId" />
+    <input type="hidden" asp-for="Activated" value="@Model?.Activated" />
+    <input type="hidden" asp-for="SystemImagesId" value="@Model?.SystemImagesId" />
+    <input type="hidden" Id="backgroundRefreshBlocker" value="" />
+    <!-- /Hidden inputs -->
+    <div class="d-flex align-items-center mb-3">
+        <label for="UserLogin" class="me-3" style="width: 150px;">Login</label>
+        <div class="flex-grow-1">
+            <input asp-for="UserLogin" class="form-control" maxlength="100" value="@Model?.UserLogin" />
+            <span asp-validation-for="UserLogin" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label for="UserName" class="me-3" style="width: 150px;">Jméno</label>
+        <div class="flex-grow-1">
+            <input asp-for="UserName" class="form-control" maxlength="100" value="@Model?.UserName" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label for="UserSurname" class="me-3" style="width: 150px;">Příjmení</label>
+        <div class="flex-grow-1">
+            <input asp-for="UserSurname" class="form-control" maxlength="255" value="@Model?.UserSurname" />
+            <span asp-validation-for="UserSurname" class="text-danger d-block mt-1"></span>
+        </div>
+    </div>
+    @if (Model?.Id == 0)
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label for="UserPasswordPlain" class="me-3" style="width: 150px;">Heslo</label>
+            <div class="flex-grow-1">
+                <input asp-for="UserPasswordPlain" class="form-control" type="password" maxlength="255" />
+                <span asp-validation-for="UserPasswordPlain" class="text-danger d-block mt-1"></span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center mb-3">
+            <label for="ConfirmNewPassword" class="me-3" style="width: 150px;">Potvrzení hesla</label>
+            <div class="flex-grow-1">
+                <input asp-for="ConfirmNewPassword" class="form-control" type="password" maxlength="255" />
+                <span asp-validation-for="ConfirmNewPassword" class="text-danger d-block mt-1"></span>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex align-items-center mb-3">
+        <label for="UserDescription" class="me-3" style="width: 150px;">Popis</label>
+        <div class="flex-grow-1">
+            <textarea asp-for="UserDescription" class="form-control" rows="3" placeholder="Popis uživatele"></textarea>
+            <span asp-validation-for="UserDescription" class="text-danger"></span>
+        </div>
+    </div>
+    @if ((Model?.RoleId != UserRoles.GetRoleByName("Admin")) && Model?.Id != Model?.RedactorId)
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label class="form-check-label me-3" for="Active" style="width: 150px; text-align:left">Aktivní</label>
+            <div class="flex-grow-1">
+                <div class="form-switch">
+                    @Html.CheckBoxFor(m => m.Active, new { @class = "form-check-input", id = "Active", title = "Aktivuje nebo deaktivuje uživatelský účet.", style = "cursor:pointer" })
+                </div>
+            </div>
+        </div>  
+    }
+    else
+    {
+        @Html.HiddenFor(m => m.Active)
+    }
+    @if (Model?.Id == 0)
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label for="RoleId" class="me-3" style="width: 150px;">Role</label>
+            <div class="flex-grow-1">
+                <select asp-for="RoleId" asp-items="@Model?.RoleOptionsNew" class="form-select"></select>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label for="RoleId" class="me-3" style="width: 150px;">Role</label>
+            <div class="flex-grow-1">
+                <select asp-for="RoleId" asp-items="@Model?.RoleOptionsEdit" class="form-select"></select>
+            </div>
+        </div>
+    } 
+    
+    <!-- Výběr uživatelské skupiny může být pouze pro nového uživatele, změna není možná -->
+    @if (Model?.Id == 0) 
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label for="GroupId" class="me-3" style="width: 150px;">Skupina/Rodina</label>
+            <div class="flex-grow-1">
+                <select asp-for="GroupId" asp-items="@Model?.GroupsOptionsNew" class="form-select"></select>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex align-items-center mb-3">
+            <label for="GroupId" class="me-3" style="width: 150px;">Skupina/Rodina</label>
+            <div class="flex-grow-1">
+                <select asp-for="GroupId" asp-items="@Model?.GroupsOptionsEdit" class="form-select" disabled></select>
+                @Html.HiddenFor(m => m.GroupId)
+            </div>
+        </div>
+    }
+    <br />
+    <button type="submit" class="btn btn-primary"><svg bootstrap-icon="Floppy" width="16" height="16" aria-label="Save"></svg>&nbsp;Uložit změny</button>
+    <br />
+    
+    @if (Model?.Id != 0)
+    {
+        <div class="form-text text-end w-100">poslední změna provedena @Model?.CreateDateTime.ToString("dd.MM.yyyy") 
+            @if (!string.IsNullOrWhiteSpace(Model?.CreateAuthorName))
+            {
+                @($"uživatelem {Model?.CreateAuthorName}")
+            }            
+        </div>
+    }
+        
+</form>

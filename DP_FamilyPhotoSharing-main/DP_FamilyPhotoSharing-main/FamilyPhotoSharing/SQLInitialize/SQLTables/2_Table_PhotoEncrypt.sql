@@ -1,0 +1,20 @@
+IF OBJECT_ID('dbo.PhotoEncrypt', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.PhotoEncrypt;
+    PRINT 'Tabulka PhotoEncrypt byla smazána.';
+END
+GO
+BEGIN
+	CREATE TABLE PhotoEncrypt (
+		Id INT PRIMARY KEY IDENTITY(1,1),
+		UserId INT NOT NULL,
+		FileId INT NOT NULL,
+		FileType SMALLINT NOT NULL,
+		Aes VARBINARY(MAX) NOT NULL,
+		Nonce VARBINARY(12) NOT NULL,
+		Tag VARBINARY(16) NOT NULL,
+		CreateDateTime DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+		CreateAuthorId INT NOT NULL DEFAULT 0,
+	);
+END
+GO

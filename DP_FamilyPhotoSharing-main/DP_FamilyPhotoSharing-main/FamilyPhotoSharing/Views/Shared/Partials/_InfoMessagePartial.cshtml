@@ -1,0 +1,25 @@
+﻿@if (ViewBag.Message != null)
+{
+    <div id="autoHideAlert" class="alert alert-@ViewBag.Type">@ViewBag.Message</div>
+}
+
+<script>
+    setTimeout(() => {
+        const alert = document.getElementById("autoHideAlert");
+        if (alert) {
+
+            alert.classList.remove("show");
+
+            setTimeout(() => {
+                alert.remove();
+
+                @if (ViewBag.RefreshFamily != "")
+                {
+                        @:const section = document.getElementById("section_title_2");
+                        @:section.innerHTML = "@ViewBag.RefreshFamily";
+                }
+
+            }, 500);
+        }
+    }, 3000);
+</script>

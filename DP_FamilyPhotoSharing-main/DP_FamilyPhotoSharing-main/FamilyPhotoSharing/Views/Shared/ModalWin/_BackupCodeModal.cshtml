@@ -1,0 +1,143 @@
+﻿@section Scripts {
+    @{
+        await Html.RenderPartialAsync("Modal/_ValidationScriptsPartial");
+    }
+}
+@{
+    ViewData["Title"] = "Získání záchraného klíče";
+}
+
+<!-- Modal -->
+<div class="modal fade" id="securityModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Bezpečnostní operace</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="border rounded p-3 mb-4">
+                    <h6 class="mb-3">Ověření funkčnosti záchranného klíče</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label">Zadejte klíč</label>
+                        <input id="verifyInput" type="text" class="form-control" placeholder="Hodnota k ověření">
+                    </div>
+
+                    <button id="btnVerify" type="button" class="btn btn-primary">Ověřit</button>
+                </div>
+
+                <div class="border rounded p-3">
+                    <h6 class="mb-3">Záchranný klíč</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label">Vygenerovat nový klíč</label>
+                        <input id="keyInput" type="text" class="form-control" readonly>
+                        <div class="form-text">
+                            Tento klíč si bezpečně uložte. Bez něj nebude možné obnovit přístup.
+                        </div>
+                    </div>
+
+                    <button id="btnGenerateKey" type="button" class="btn btn-primary">Vygenerovat záchranný klíč</button>
+                    <button id="btnSaveKey" type="button" class="btn btn-success">Uložit klíč</button>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Zavřít</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("btnSaveKey").addEventListener("click", async () => {
+
+        const keyValue = document.getElementById("keyInput").value;
+
+        if (!keyValue) {
+            showToast("Vygenerujte klíč.", TOAST_DANGER);
+            return;
+        }
+
+        try {
+            const response = await fetch("/SetNewBackupKey", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    backupKey: keyValue  
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                showToast("Chyba : " + errorText, TOAST_DANGER);
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast("Záchranný klíč byl úspěšně uložen.", TOAST_SUCCESS);
+            } else {
+                showToast("Nepodařilo se uložit záchranný klíč.", TOAST_DANGER);
+            }
+
+        } catch (err) {
+            showToast("Došlo k chybě při komunikaci se serverem..", TOAST_DANGER);
+            console.error(err);
+        }
+    });
+
+    document.getElementById("btnVerify").addEventListener("click", async () => {
+
+        const value = document.getElementById("verifyInput").value;
+
+        if (!value) {
+            showToast("Zadejte klíč.", TOAST_DANGER);
+            return;
+        }
+
+        try {
+            const response = await fetch("/ValidateBackupKey", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    backupKey: value  
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                showToast("Chyba : " + errorText, TOAST_DANGER);
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast("Klíč je platný.", TOAST_SUCCESS);
+            } else {
+                showToast("Klíč není platný.", TOAST_WARNING);
+            }
+
+        } catch (e) {
+            showToast("Došlo k chybě při komunikaci se serverem..", TOAST_DANGER);
+            console.error(e);
+        }
+    });
+
+    document.getElementById("btnGenerateKey").addEventListener("click", () => {
+        const key = crypto.randomUUID(); 
+        document.getElementById("keyInput").value = key;
+    });
+</script>

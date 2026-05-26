@@ -1,0 +1,50 @@
+﻿<style>
+    #appToast {
+        min-width: 350px;
+        padding: 1rem 1.5rem;
+        font-size: 1.1rem;
+    }
+    .toast-container.position-fixed {
+    z-index: 5000 !important;
+}
+</style>
+
+<div class="toast-container position-fixed top-50 start-50 translate-middle p-3">
+    <div id="appToast"
+         class="toast text-bg-primary border-0"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true">
+
+        <div class="d-flex">
+            <div id="appToastMessage" class="toast-body">
+                <!-- sem se doplní text -->
+            </div>
+
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const TOAST_PRIMARY = "primary";
+    const TOAST_SUCCESS = "success";
+    const TOAST_DANGER = "danger";
+    const TOAST_WARNING = "warning";
+    const TOAST_INFO = "info";
+    
+    function showToast(message, type = "primary") {
+        const toastEl = document.getElementById("appToast");
+        const toastBody = document.getElementById("appToastMessage");
+
+        toastBody.textContent = message;
+        toastEl.className = `toast bg-${type} text-white border-0`;
+
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+</script>

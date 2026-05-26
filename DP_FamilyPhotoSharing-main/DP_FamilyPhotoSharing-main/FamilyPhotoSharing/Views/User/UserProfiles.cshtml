@@ -1,0 +1,55 @@
+﻿@using System.Security.Claims
+@using ModelLayer.System
+@{
+    ViewData["Title"] = "Uživatelské profily.";
+}
+@{
+    int index = 1;
+}
+@model List<FamilyPhotoSharing.ViewsData.UserView>;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="display-4 mb-0">Uživatelské profily</h1>
+    <a onclick="location.href='@Url.Action("Profile", "User", new { userId = 0, newProfile = true })'" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i><svg bootstrap-icon="PersonAdd" width="24" height="24" aria-label="UserAdd"></svg> Přidat uživatele
+    </a>
+</div>
+<br />
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Pořadí</th>
+            @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+            {
+                <th>ID</th>
+            }
+            <th>Login</th>
+            <th>Jméno</th>
+            <th>Příjmení</th>
+            <th>Role</th>
+            <th>Skupina</th>
+            <th>Aktivní</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.OrderBy(u => u.Active).ToList())
+        {
+            <tr onclick="location.href='@Url.Action("Profile", "User", new { userId = user?.Id, newProfile = false })'" style="cursor:pointer;">
+                <td>@index.</td>
+                @if (User.FindFirst(ClaimTypes.Role)?.Value == UserRoles.Admin)
+                {
+                    <td>@user?.Id</td>
+                }
+                <td>@user?.UserLogin</td>
+                <td>@user?.UserName</td>
+                <td>@user?.UserSurname</td>
+                <td>@user?.RoleName</td>
+                <td>@user?.GroupName</td>
+                <td>@(user?.Active == true ? "Aktivní" : "Neaktivní")</td>
+            </tr>
+            index++;
+        }
+    </tbody>
+</table>
+

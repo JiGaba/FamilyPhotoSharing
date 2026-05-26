@@ -1,0 +1,235 @@
+﻿<div class="modal fade" id="progressModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Probíhá časově náročná operace…</h5>
+            </div>
+            <div class="modal-body">
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar" style="width: 0%">0%</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// BackRoundService BS_ActiveUser
+    async function BS_ChangeUsersSharedAlbum(userIds, albumId) {
+    const request = {
+        UserIds: userIds,
+        AlbumId: albumId
+    };
+
+    const res = await fetch("/Background/Start_ChangeUsersSharedAlbum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_ActiveUser(userId) {
+    const request = {
+            UserId: userId
+    };
+
+    const res = await fetch("/Background/Start_ActiveUser", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_DeleteAlbum(albumId) {
+    const request = {
+        AlbumId: albumId
+    };
+
+    const res = await fetch("/Background/Start_DeleteAlbum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_DeleteShareAlbum(albumId) {
+    const request = {
+        AlbumId: albumId
+    };
+
+    const res = await fetch("/Background/Start_DeleteSharedAlbum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_RemoveShare(selectedPhotoIds, albumId, thumbnailData){
+    const request = {
+        PhotoIds: selectedPhotoIds,
+        AlbumId: albumId,
+        ThumbnailData: Number(thumbnailData)
+    };
+
+    const res = await fetch("/Background/Start_RemoveFromSharedAlbum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_AddPhotoToSharedAlbum(selectedPhotoIds, albumId, thumbnailData){
+    const request = {
+        PhotoIds: selectedPhotoIds,
+        AlbumId: albumId,
+        ThumbnailData: Number(thumbnailData)
+    };
+
+    const res = await fetch("/Background/Start_AddPhotoToSharedAlbum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_MoveToMainGroup(selectedPhotoIds, albumId, thumbnailData){
+    const request = {
+        photoIds: selectedPhotoIds,
+        albumId: albumId,
+        thumbnailData: thumbnailData
+    };
+
+    const res = await fetch("/Background/Start_MoveToMainGroup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_MoveToMainPersonal(selectedPhotoIds, albumId, thumbnailData){
+    const request = {
+        photoIds: selectedPhotoIds,
+        albumId: albumId,
+        thumbnailData: thumbnailData
+    };
+
+    const res = await fetch("/Background/Start_MoveToMainPersonal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function BS_PhotoDelete(selectedPhotoIds, albumId, thumbnailData){
+    const request = {
+        photoIds: selectedPhotoIds,
+        albumId: albumId,
+        thumbnailData: thumbnailData
+    };
+
+    const res = await fetch("/Background/Start_PhotoDelete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request)
+    });
+
+    const data = await res.json();
+    startReencryptForm(data);
+}
+
+async function startReencryptForm(data) {
+
+    // Modal dialog
+    const modal = new bootstrap.Modal(document.getElementById("progressModal"), {
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    modal.show();
+
+    await new Promise(r => setTimeout(r, 50));
+    
+    // Pooling
+    pollStatus(data.jobId);
+}
+
+async function pollStatus(jobId) {
+    const input = document.getElementById("backgroundRefreshBlocker");
+    const block = input !== null;
+
+    const interval = setInterval(async () => {
+        const res = await fetch(`/Background/Status/${jobId}`);
+        if (res.status === 404) {
+            return; // jen přeskočíme tento tick
+        }
+
+        if (!res.ok) {
+            clearInterval(interval);
+
+            const modalEl = document.getElementById("progressModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            showToast("Došlo k chybě při komunikaci se serverem.", TOAST_DANGER);
+            return;
+        }
+
+        const data = await res.json();
+        console.log("Polling...", jobId);
+
+        updateProgress(data.percent);
+
+        if (data.status === "Completed") {
+            clearInterval(interval);
+            updateProgress(100);
+
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById("progressModal")).hide();
+                if(!Boolean(block))
+                    location.reload();
+            }, 500);
+        }
+
+        if (data.status === "Failed") {
+            clearInterval(interval);
+            const modalEl = document.getElementById("progressModal");
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            showToast("Došlo k chybě: " + data.error, TOAST_DANGER);
+        }
+
+    }, 500);
+}
+
+function updateProgress(percent) {
+    const bar = document.getElementById("progressBar");
+    bar.style.width = percent + "%";
+    bar.innerText = percent + "%";
+}
+
+</script>

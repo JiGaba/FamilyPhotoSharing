@@ -1,0 +1,74 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@{
+    ViewData["Title"] = "Rodinné fotoalbum";
+}
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@model PhotoAlbumView;
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    @if (Model?.Id == 0)
+    {
+        <h1 class="display-4 mb-0">Nové rodinné fotoalbum</h1>
+    }
+    else
+    {
+        <h1 class="display-4 mb-0">Rodinné fotoalbum</h1>
+    }
+    <svg bootstrap-icon="Images" width="80" height="80" aria-label="Group"></svg>
+</div>
+<br />
+<form method="post" enctype="multipart/form-data" action="/Album/EditGroupPhotoAlbum">
+    <!--Hidden inputs-->
+    <input type="hidden" asp-for="Id" name="Id" value="@Model?.Id" />
+    <input type="hidden" asp-for="UserGroupsId" name="UserGroupsId" value="@Model?.UserGroupsId" />
+    <input type="hidden" asp-for="Personal" name="Personal" value="@Model?.Personal" />
+    <input type="hidden" asp-for="OwnerUserId" name="OwnerUserId" value="@Model?.OwnerUserId" />
+    <input type="hidden" asp-for="TitlePhotoId" name="TitlePhotoId" value="@Model?.TitlePhotoId" />
+    <!-- /Hidden inputs -->
+    <div class="d-flex align-items-center mb-3">
+        <label for="Login" class="me-3" style="width: 150px;">Název</label>
+        <div class="flex-grow-1">
+            <input asp-for="AlbumName" class="form-control" maxlength="255" value="@Model?.AlbumName" />
+            <span asp-validation-for="AlbumName" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center mb-3">
+        <label asp-for="AlbumDescription" class="me-3" style="width: 150px;">Popis</label>
+        <div class="flex-grow-1">
+            <textarea asp-for="AlbumDescription"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Popis alba">
+            </textarea>
+            <span asp-validation-for="AlbumDescription" class="text-danger"></span>
+        </div>
+    </div>
+
+    <br />
+
+    <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary">Uložit změny</button>
+        <a asp-controller="Album" asp-action="GroupPhotoAlbums" class="btn btn-secondary">
+            Zpět
+        </a>
+    </div>
+    <br />
+
+
+    @if (Model?.Id != 0)
+    {
+        <div class="form-text text-end w-100">
+            poslední změna provedena @Model?.CreateDateTime.ToString("dd.MM.yyyy")
+            @if (!string.IsNullOrWhiteSpace(@Model?.IAuthorName))
+            {
+                <span>uživatelem @Model.IAuthorName</span>
+            }
+        </div>
+    }
+
+</form>

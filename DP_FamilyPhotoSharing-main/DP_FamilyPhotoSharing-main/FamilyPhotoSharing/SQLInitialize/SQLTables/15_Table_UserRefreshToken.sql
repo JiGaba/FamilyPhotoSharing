@@ -1,0 +1,18 @@
+IF OBJECT_ID('dbo.UserRefreshToken', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE dbo.UserRefreshToken;
+    PRINT 'Tabulka UserRefreshToken byla smazána.';
+END
+GO
+BEGIN
+	CREATE TABLE UserRefreshToken (
+		Id INT PRIMARY KEY IDENTITY(1,1),
+		UserId INT NOT NULL,
+		Token NVARCHAR(2000) UNIQUE NOT NULL,
+		IsRevoked BIT NOT NULL DEFAULT 0,
+		Expires DATETIME NOT NULL,
+		CreateDateTime DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+		CreateAuthorId INT NOT NULL DEFAULT 0
+	);
+END
+GO

@@ -1,0 +1,65 @@
+﻿@using ModelLayer.Data
+@model AdminRegisterModel
+@{
+    ViewData["Title"] = "Registrace do systému";
+}
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+@await Html.PartialAsync("Partials/_InfoMessagePartial")
+
+@if (!string.IsNullOrWhiteSpace(ViewBag.Error as string))
+{
+    @ViewBag.Error
+}
+else
+{
+<div class="text-center">
+    <h1 class="display-4">Vítejte v aplikaci pro rodinném sdílení fotografií</h1>
+    <br/>
+    <p>
+        Nyní se nacházíte na registrační stránce, kde se provede registrace administrátora systému. Administrátor může být v systému pouze jeden, proto si pečlivě uchovejte jeho přihlašovací údaje.
+    </p>
+    <p>Tato aplikace byla realizována v rámci diplomové práce na FIA UTB ve Zlíně, ve školním roce 2025/2026. Smyslem aplikace je sdílené fotografií mezi členy rodiny, včetně jejich zvýšené ochrany šifrováním. 
+        Fotografie mohou být dostupné jen pro svého vlastníka nebo v rámci celé rodiny. Fotografie lze i sdílet s osobami, které jsou v systému zavedeny pouze jako hosté s přístupem jen k vymezené množině fotografií.</p>
+    <p>
+        Po úspěšné registraci budete přesměrování na přihlašovací stránku.
+    </p>
+
+    <form asp-action="Register" method="post" class="p-4 border rounded bg-light mx-auto" style="max-width:800px;">
+        <div class="mb-3">
+            <label asp-for="UserName" class="form-label"><a href="#"></a>Jméno</label>
+            <input asp-for="UserName" class="form-control text-center" />
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserSurname" class="form-label">Příjmení</label>
+            <input asp-for="UserSurname" class="form-control text-center" />
+            <span asp-validation-for="UserSurname" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserLogin" class="form-label">Login</label>
+            <input asp-for="UserLogin" class="form-control text-center" />
+            <span asp-validation-for="UserLogin" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserPasswordPlain" class="form-label">Heslo</label>
+            <input asp-for="UserPasswordPlain" type="password" class="form-control text-center" />
+            <span asp-validation-for="UserPasswordPlain" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="UserPasswordRepeat" class="form-label">Zopakujte heslo</label>
+            <input asp-for="UserPasswordRepeat" type="password" class="form-control text-center" />
+            <span asp-validation-for="UserPasswordRepeat" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrovat</button>
+    </form>
+</div>
+}

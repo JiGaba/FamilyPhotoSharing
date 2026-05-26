@@ -1,0 +1,72 @@
+﻿@using ModelLayer.System
+@model CheckAccessModal;
+@{
+    ViewData["Title"] = "Kontrola přístupů";
+}
+<div class="container mt-4">
+    <div class="row mb-3">
+        <label class="col-sm-4 col-form-label">Přístup k DB:</label>
+        <div class="col-sm-8 d-flex align-items-center">
+            <span id="dbStatus" class="fw-bold"></span>
+            <span class="@(Model.CheckDbConn ? "text-success" : "text-danger")">
+                @(Model.CheckDbConn ? "Ano" : "Ne")
+            </span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-sm-4 col-form-label">Přístup k tabulce Users:</label>
+        <div class="col-sm-8">
+            <span class="@(Model.CheckTableConn ? "text-success" : "text-danger")">
+                @(Model.CheckTableConn ? "Ano" : "Ne")
+            </span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-sm-4 col-form-label">Nastaven šifrovací klíč:</label>
+        <div class="col-sm-8 d-flex align-items-center">
+            <span class="@(Model.CheckKeyConn ? "text-success" : "text-danger")">
+                @(Model.CheckKeyConn ? "Ano" : "Ne")
+            </span>
+        </div>
+    </div>
+    <div class="row mb-3">
+        <label class="col-sm-4 col-form-label">Test přístupu k souborům:</label>
+
+        <div class="col-sm-8 d-flex flex-column">
+            <div class="d-inline-flex align-items-center mb-1">
+                <button class="btn btn-primary btn-sm" onclick="generateTestFile()">Vygenerovat testovací soubor</button>
+            </div>
+            <small id="value2-note" class="text-muted">
+                Vygenerovaný soubor se zobrazí v kořenové složce, která je namapována k této aplikaci.
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function generateTestFile() {
+        try {
+            const response = await fetch('/Access/GenerateTestFile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            if (!response.ok) {
+                const text = await response.text()
+                showToast(text, TOAST_DANGER);
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                showToast("Soubor byl úspěšně vygenerován.", TOAST_SUCCESS);
+            }
+
+        } catch (err) {
+            showToast("Chyba:" + err.message, TOAST_DANGER);
+        }
+    }
+
+</script>

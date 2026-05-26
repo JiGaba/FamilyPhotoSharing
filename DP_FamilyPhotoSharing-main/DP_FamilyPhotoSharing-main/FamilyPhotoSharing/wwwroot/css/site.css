@@ -1,0 +1,87 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html, body {
+  position: relative;
+  min-height: auto;
+}
+
+body {
+  margin-bottom: 60px;
+}
+/* Novì pøidané */
+@media screen and (max-width: 768px) {
+    li.hide-mobile {
+        display: none !important;
+    }
+
+    li.show-mobile {
+        display: inline-flex !important;
+    }
+}
+
+
+body {
+    margin: 0;
+}
+
+html, body {
+    
+    margin: 0;
+}
+
+
+.layout {
+    display: flex;
+    min-height: calc(100vh - 57px - 61px);
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #e0e0e0;
+}
+
+    .sidebar ul {
+        margin-top: 0;
+    }
+
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+.menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .menu li {
+        padding: 15px;
+    }
+
+        .menu li.active {
+            background: #1abc9c;
+        }
+
+    .menu a {
+        text-decoration: none;
+        color: black;
+        font-weight: normal;
+        font-variant: small-caps;
+    }
+    .footer{
+        position: relative !important;
+    }

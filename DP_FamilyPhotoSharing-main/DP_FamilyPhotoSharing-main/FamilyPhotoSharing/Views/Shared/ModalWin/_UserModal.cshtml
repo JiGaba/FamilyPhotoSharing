@@ -1,0 +1,83 @@
+﻿@using FamilyPhotoSharing.ViewsData
+@model List<UserModalView>
+@{
+    int index = 1;
+}
+
+<div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Sdíleno s vybranými uživateli</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="sharedAlbumForm" method="post" action="@Url.Action("Start_AddPhotoToSharedAlbum", "Background")">
+
+            <div class="modal-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Pořadí</th>
+                            <th>Jméno</th>
+                            <th>Příjmení</th>
+                            <th>Role</th>
+                            <th class="text-center">Vybrán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.OrderByDescending(u => u.Owner))
+                        {
+                            <tr>
+                                <td>@index.</td>
+                                <td>@user?.UserName</td>
+                                <td>@user?.UserSurname</td>
+                                <td>@user?.UserRoleString @(user?.Owner == true ? "(vlastník)" : "")</td>
+                                <td class="text-center">
+                                    <input class="form-check-input me-1 user-checkbox"
+                                           style="cursor:pointer"
+                                           type="checkbox"
+                                           value="@user?.Id"
+                                           data-name="@user?.UserName"
+                                           data-surname="@user?.UserSurname"
+                                           data-role="@user?.UserRoleString"
+                                           data-owner="@user?.Owner.ToString().ToLower()"
+                                           data-access=@(user?.Owner == true ? "vlastník" : "host")
+                                           @(user?.HasAccess == true || user?.Owner == true ? "checked" : "")
+                                           @(user?.Owner == true ? "disabled" : "") />
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button id="confirmUsersModal" type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    Sdílet
+                </button>
+            </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script>
+
+    document.getElementById("confirmUsersModal").addEventListener("click", () => {
+
+        const albumId = document.querySelector("#albumId").value;
+        const userIds = [...document.querySelectorAll('.user-checkbox:checked')]
+            .map(cb => cb.value);
+
+        BS_ChangeUsersSharedAlbum(userIds, albumId);
+        const modalEl = document.getElementById("userModal");
+        bootstrap.Modal.getInstance(modalEl).hide();
+    });
+
+
+</script>
